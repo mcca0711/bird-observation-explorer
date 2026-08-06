@@ -5,6 +5,8 @@ observations across Canada and the United States.
 
 [Live application](https://mcca0711.github.io/bird-observation-explorer/)
 
+![Bird Observation Explorer showing filters, summary metrics, and the interactive observation map](docs/app-overview.png)
+
 ## Overview
 
 Bird Observation Explorer combines ecological occurrence records, national park
@@ -122,6 +124,8 @@ fractional.
 
 Small samples receive a visible warning, and tied peak months are reported
 together.
+
+![Monthly sampled observation records for American Robin with June selected](docs/seasonal-chart.png)
 
 ### National park system context
 

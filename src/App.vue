@@ -300,50 +300,74 @@ onMounted(async () => {
         </label>
 
         <div
-          class="mt-6 grid grid-cols-2 gap-4 border-t border-white/10 pt-5 lg:grid-cols-1"
+          class="mt-6 grid grid-cols-2 gap-3 border-t border-white/10 pt-5 lg:grid-cols-1"
         >
-          <div>
-            <p class="text-xs text-slate-500">
+          <div
+            class="rounded-xl border border-white/10 bg-slate-950/70 p-3"
+          >
+            <p
+              class="text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Visible records
             </p>
 
-            <p class="mt-1 text-2xl font-semibold">
+            <p
+              class="mt-2 text-2xl font-semibold tabular-nums text-slate-50"
+            >
               {{
                 visibleObservations.length.toLocaleString()
               }}
             </p>
           </div>
 
-          <div>
-            <p class="text-xs text-slate-500">
+          <div
+            class="rounded-xl border border-white/10 bg-slate-950/70 p-3"
+          >
+            <p
+              class="text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Inside national parks
             </p>
 
-            <p class="mt-1 text-xl font-semibold">
+            <p
+              class="mt-2 text-xl font-semibold tabular-nums text-slate-50"
+            >
               {{
                 protectedAreaRecordCount.toLocaleString()
               }}
             </p>
           </div>
 
-          <div>
-            <p class="text-xs text-slate-500">
+          <div
+            class="rounded-xl border border-white/10 bg-slate-950/70 p-3"
+          >
+            <p
+              class="text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Species represented
             </p>
 
-            <p class="mt-1 text-xl font-semibold">
+            <p
+              class="mt-2 text-xl font-semibold tabular-nums text-slate-50"
+            >
               {{
                 representedSpeciesCount.toLocaleString()
               }}
             </p>
           </div>
 
-          <div>
-            <p class="text-xs text-slate-500">
+          <div
+            class="rounded-xl border border-white/10 bg-slate-950/70 p-3"
+          >
+            <p
+              class="text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               States and provinces
             </p>
 
-            <p class="mt-1 text-xl font-semibold">
+            <p
+              class="mt-2 text-xl font-semibold tabular-nums text-slate-50"
+            >
               {{
                 representedRegionsCount.toLocaleString()
               }}
