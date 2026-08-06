@@ -1,0 +1,36 @@
+{
+  "name": "bird-observation-explorer",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@deck.gl/aggregation-layers": "9.3.7",
+    "@deck.gl/core": "^9.3.7",
+    "@deck.gl/layers": "^9.3.7",
+    "@deck.gl/mapbox": "^9.3.7",
+    "@duckdb/duckdb-wasm": "^1.33.1-dev57.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "d3": "^7.9.0",
+    "maplibre-gl": "5.24.0",
+    "tailwindcss": "^4.3.3",
+    "vue": "^3.5.40"
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.3",
+    "@types/node": "^24.13.3",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vue/test-utils": "^2.4.11",
+    "@vue/tsconfig": "^0.9.1",
+    "jsdom": "^30.0.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.0",
+    "vitest": "^4.1.10",
+    "vue-tsc": "^3.3.8"
+  }
+}
