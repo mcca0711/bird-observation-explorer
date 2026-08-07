@@ -6,10 +6,7 @@ import { describe, expect, it } from 'vitest'
 import TimelineChart from '../src/components/TimelineChart.vue'
 import type { Observation } from '../src/data'
 
-function makeObservation(
-  id: string,
-  date: string,
-): Observation {
+function makeObservation(id: string, date: string): Observation {
   return {
     id,
     scientificName: 'Branta canadensis',
@@ -26,18 +23,9 @@ function makeObservation(
 }
 
 const observations: Observation[] = [
-  makeObservation(
-    '1',
-    '2024-01-10',
-  ),
-  makeObservation(
-    '2',
-    '2024-01-20',
-  ),
-  makeObservation(
-    '3',
-    '2024-02-15',
-  ),
+  makeObservation('1', '2024-01-10'),
+  makeObservation('2', '2024-01-20'),
+  makeObservation('3', '2024-02-15'),
 ]
 
 describe('TimelineChart', () => {
@@ -50,17 +38,11 @@ describe('TimelineChart', () => {
       },
     })
 
-    const labels = wrapper
-      .findAll('title')
-      .map(title => title.text())
+    const labels = wrapper.findAll('title').map((title) => title.text())
 
-    expect(labels).toContain(
-      'Jan: 2 sampled observations',
-    )
+    expect(labels).toContain('Jan: 2 sampled observations')
 
-    expect(labels).toContain(
-      'Feb: 1 sampled observations',
-    )
+    expect(labels).toContain('Feb: 1 sampled observations')
   })
 
   it('reports the selected month', async () => {
@@ -74,9 +56,7 @@ describe('TimelineChart', () => {
 
     await wrapper.get('select').setValue('2')
 
-    expect(
-      wrapper.emitted('selectMonth'),
-    ).toEqual([[2]])
+    expect(wrapper.emitted('selectMonth')).toEqual([[2]])
   })
 
   it('clears the selected month', async () => {
@@ -90,9 +70,7 @@ describe('TimelineChart', () => {
 
     await wrapper.get('button').trigger('click')
 
-    expect(
-      wrapper.emitted('selectMonth'),
-    ).toEqual([[null]])
+    expect(wrapper.emitted('selectMonth')).toEqual([[null]])
   })
 
   it('explains why no chart appears for all species', () => {
@@ -108,25 +86,14 @@ describe('TimelineChart', () => {
       'Choose a species to reveal its seasonal pattern',
     )
 
-    expect(
-      wrapper.find('svg').exists(),
-    ).toBe(false)
+    expect(wrapper.find('svg').exists()).toBe(false)
   })
 
   it('reports all months tied for the peak count', () => {
     const tiedObservations = [
-      makeObservation(
-        '1',
-        '2024-06-10',
-      ),
-      makeObservation(
-        '2',
-        '2024-07-10',
-      ),
-      makeObservation(
-        '3',
-        '2024-10-10',
-      ),
+      makeObservation('1', '2024-06-10'),
+      makeObservation('2', '2024-07-10'),
+      makeObservation('3', '2024-10-10'),
     ]
 
     const wrapper = mount(TimelineChart, {

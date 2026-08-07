@@ -9,21 +9,21 @@ observations across Canada and the United States.
 
 ## Overview
 
-Bird Observation Explorer combines ecological occurrence records, national park
-system boundaries, browser-based analytics, and interactive visualization.
+Bird Observation Explorer combines ecological occurrence records, park-system
+boundaries, browser-based analytics, and interactive visualization.
 
 Users can:
 
 - Explore geographic observation density
 - Zoom from regional patterns to individual records
-- Filter by country, species, month, and national park system context
+- Filter by country, species, month, and mapped park-system context
 - Inspect individual observation details
 - Compare monthly records for a selected species
-- Identify observations located inside mapped national park system areas
+- Identify observations located inside mapped park-system areas
 
 The bundled dataset contains 11,959 validated observation records. A GeoPandas
-point-in-polygon analysis identified 296 records inside mapped Canadian or
-United States national park system boundaries.
+point-in-polygon analysis identified 277 records inside mapped Canadian or
+United States park-system boundaries.
 
 ## Application architecture
 
@@ -55,6 +55,10 @@ The browser does not repeatedly download and clean records from GBIF. Python
 creates a validated GeoParquet snapshot before deployment, and DuckDB WASM
 queries that snapshot directly inside the browser.
 
+A version-pinned DuckDB worker is served as a static application asset. The
+application closes its DuckDB connection and terminates the worker after the
+dataset has been loaded.
+
 ## Technology
 
 ### Frontend
@@ -79,6 +83,9 @@ queries that snapshot directly inside the browser.
 
 ### Quality assurance
 
+- ESLint
+- Prettier
+- Ruff
 - pytest
 - Vitest
 - Vue Test Utils
@@ -105,6 +112,24 @@ a descriptive user agent, and an overall record limit.
 
 Only approved output fields are written to the published dataset.
 
+## Reference-data acquisition
+
+The repository includes a separate Python script for downloading the Canadian
+and United States park-system boundary datasets.
+
+The script:
+
+- Downloads both datasets from official government spatial services
+- Uses request timeouts and retry limits
+- Enforces a maximum response size
+- Validates the GeoJSON structure
+- Checks required name fields
+- Accepts only polygon and multipolygon geometry
+- Confirms EPSG:4326
+- Validates temporary files before replacing existing data
+
+The reference files are excluded from Git and can be recreated when needed.
+
 ## Visualization decisions
 
 ### Density-first map
@@ -127,12 +152,12 @@ together.
 
 ![Monthly sampled observation records for American Robin with June selected](docs/seasonal-chart.png)
 
-### National park system context
+### Park-system context
 
 GeoPandas checks whether each observation point falls inside:
 
 - Canadian national park, national park reserve, national urban park, or
-  Saguenay–St. Lawrence Marine Park boundaries
+  Saguenay-St. Lawrence Marine Park boundaries
 - United States National Park Service unit boundaries
 
 These boundaries do not represent every protected area in either country.
@@ -141,27 +166,33 @@ These boundaries do not represent every protected area in either country.
 
 ### Bird observations
 
-EOD – eBird Observation Dataset
+EOD - eBird Observation Dataset  
 Cornell Lab of Ornithology, accessed through GBIF
 
-- Dataset
+- Dataset:
   https://www.gbif.org/dataset/4fa7b334-ce0d-4e88-aaae-2e0c138d049e
-- DOI
+- DOI:
   https://doi.org/10.15468/aomfnb
 
 ### Canadian boundaries
 
-National Parks and National Park Reserves of Canada Legislative Boundaries
+National Parks and National Park Reserves of Canada Legislative Boundaries  
 Natural Resources Canada
 
 https://open.canada.ca/data/en/dataset/9e1507cd-f25c-4c64-995b-6563bf9d65bd
 
-Licensed under the Open Government Licence – Canada.
+Licensed under the Open Government Licence - Canada.
 
 ### United States boundaries
 
-Administrative Boundaries of National Park System Units
+Administrative Boundaries of National Park System Units  
 National Park Service Land Resources Division
+
+Official ArcGIS FeatureServer:
+
+https://services1.arcgis.com/fBc8EJBxQRMcHlei/arcgis/rest/services/NPS_Land_Resources_Division_Boundary_and_Tract_Data_Service/FeatureServer/2
+
+Reference metadata:
 
 https://irma.nps.gov/DataStore/Reference/Profile/2316744
 
@@ -218,52 +249,21 @@ rebuilding the source data.
 
 ## Rebuild the dataset
 
-Raw national park boundary downloads are intentionally excluded from Git
-because they total approximately 97 MB.
-
-Create the required directories:
+Download and validate the official Canadian and United States park-system
+boundaries:
 
 ```powershell
-New-Item -ItemType Directory -Force data\reference\us
+.\.venv\Scripts\python.exe scripts\download_reference_data.py
 ```
 
-Download the Canadian GeoJSON:
-
-```powershell
-$canadaUrl = "https://proxyinternet.nrcan-rncan.gc.ca/arcgis/rest/services/CLSS-SATC/CLSS_Administrative_Boundaries/MapServer/1/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson"
-
-Invoke-WebRequest `
-  -Uri $canadaUrl `
-  -OutFile "data\reference\canada_national_parks.geojson"
-```
-
-Download the current public shapefile from the National Park Service reference
-page:
-
-https://irma.nps.gov/DataStore/Reference/Profile/2316744
-
-Save the archive as:
+Generated reference files:
 
 ```text
-data/reference/us_national_parks.zip
+data/reference/canada_national_parks.geojson
+data/reference/us_national_park_system.geojson
 ```
 
-Extract it:
-
-```powershell
-Expand-Archive `
-  -Path data\reference\us_national_parks.zip `
-  -DestinationPath data\reference\us `
-  -Force
-```
-
-The pipeline expects this shapefile:
-
-```text
-data/reference/us/Administrative_Boundaries_of_National_Park_System_Units.shp
-```
-
-Build the GeoParquet snapshot:
+Build the GeoParquet observation snapshot:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\build_dataset.py
@@ -275,12 +275,36 @@ Generated output:
 public/data/observations.parquet
 ```
 
-## Testing
+## Testing and code quality
+
+Check Python linting:
+
+```powershell
+.\.venv\Scripts\python.exe -m ruff check scripts tests
+```
+
+Check Python formatting:
+
+```powershell
+.\.venv\Scripts\python.exe -m ruff format --check scripts tests
+```
 
 Run the Python tests:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
+```
+
+Check Vue and TypeScript linting:
+
+```bash
+npm run lint
+```
+
+Check frontend formatting:
+
+```bash
+npm run format:check
 ```
 
 Run the frontend tests:
@@ -289,14 +313,40 @@ Run the frontend tests:
 npm test
 ```
 
-Run the production build and TypeScript checks:
+Run TypeScript compile checking and the production build:
 
 ```bash
 npm run build
 ```
 
-The GitHub Actions workflow runs all three checks before deploying the
-application.
+GitHub Actions runs linting, formatting, tests, TypeScript checking, and the
+production build before deployment.
+
+## Production scaling path
+
+The current release uses a controlled 11,959-record GeoParquet snapshot. This
+is appropriate for a focused application and can be queried efficiently in the
+browser without operating a backend.
+
+A production-scale version supporting broader eBird coverage would preserve
+the current visualization components while changing the data-delivery
+architecture.
+
+Planned scaling work would include:
+
+- Partitioned GeoParquet for broader species coverage and multi-year datasets
+- Query pushdown so only requested species, dates, and geographic areas load
+- PMTiles or another vector-tile format for high-volume observation layers
+- Server-side spatial queries through DuckDB, PostGIS, or a managed analytical
+  service
+- Progressive loading and caching for global map navigation
+- Multi-year comparisons and uncertainty-aware trend summaries
+- Raster processing for suitable abundance or distribution products
+- User-supplied boundary analysis
+- Performance budgets and deployed-site monitoring
+
+These capabilities are documented as future architecture rather than presented
+as features already implemented.
 
 ## Data limitations
 
@@ -317,17 +367,30 @@ seasonal chart appears only after a species is selected.
 Point-in-polygon results also depend on the accuracy of submitted coordinates
 and the boundary datasets available when the snapshot was created.
 
+The heatmap represents the concentration of sampled records. It does not
+represent bird abundance or population density.
+
 ## Project structure
 
 ```text
-.github/workflows/
-  deploy.yml
+.github/
+  workflows/
+    deploy.yml
 
-public/data/
-  observations.parquet
+docs/
+  app-overview.png
+  seasonal-chart.png
+
+public/
+  data/
+    observations.parquet
+  vendor/
+    duckdb/
+      duckdb-browser-mvp.worker-1.32.0.js
 
 scripts/
   build_dataset.py
+  download_reference_data.py
 
 src/
   components/
@@ -341,6 +404,11 @@ src/
 tests/
   TimelineChart.test.ts
   test_build_dataset.py
+  vue-shim.d.ts
+
+eslint.config.js
+pyproject.toml
+vite.config.ts
 ```
 
 ## Deployment
@@ -350,11 +418,14 @@ Pushes to `main` trigger GitHub Actions.
 The workflow:
 
 1. Installs Python dependencies
-2. Runs the Python tests
-3. Installs frontend dependencies
-4. Runs the frontend tests
-5. Performs the production build
-6. Publishes `dist` to GitHub Pages
+2. Checks Python linting and formatting
+3. Runs the Python tests
+4. Installs frontend dependencies
+5. Checks Vue and TypeScript linting
+6. Checks frontend formatting
+7. Runs the frontend tests
+8. Performs TypeScript compile checking and the production build
+9. Publishes `dist` to GitHub Pages
 
 ## License
 

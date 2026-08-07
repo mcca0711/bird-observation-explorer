@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  computed,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { PickingInfo } from '@deck.gl/core'
 import { HeatmapLayer } from '@deck.gl/aggregation-layers'
 import { ScatterplotLayer } from '@deck.gl/layers'
@@ -35,7 +29,7 @@ let basemapWarningLogged = false
 
 const validObservations = computed(() =>
   props.observations.filter(
-    observation =>
+    (observation) =>
       Number.isFinite(observation.longitude) &&
       Number.isFinite(observation.latitude) &&
       observation.longitude >= -180 &&
@@ -45,14 +39,8 @@ const validObservations = computed(() =>
   ),
 )
 
-function reportError(
-  source: string,
-  error: unknown,
-): void {
-  const message =
-    error instanceof Error
-      ? error.message
-      : String(error)
+function reportError(source: string, error: unknown): void {
+  const message = error instanceof Error ? error.message : String(error)
 
   errorMessage.value = `${source}: ${message}`
   status.value = ''
@@ -60,9 +48,7 @@ function reportError(
   console.error(errorMessage.value, error)
 }
 
-function getCountryName(
-  countryCode: string,
-): string {
+function getCountryName(countryCode: string): string {
   if (countryCode === 'CA') {
     return 'Canada'
   }
@@ -74,9 +60,7 @@ function getCountryName(
   return countryCode
 }
 
-function selectObservation(
-  info: PickingInfo<Observation>,
-): boolean {
+function selectObservation(info: PickingInfo<Observation>): boolean {
   if (!info.object) {
     return false
   }
@@ -87,6 +71,11 @@ function selectObservation(
   return true
 }
 
+function clearSelectedObservation(): void {
+  selectedObservation.value = null
+  updateLayers()
+}
+
 function createDensityLayer(
   observations: Observation[],
 ): HeatmapLayer<Observation> {
@@ -95,10 +84,7 @@ function createDensityLayer(
     data: observations,
     opacity: 0.68,
 
-    getPosition: observation => [
-      observation.longitude,
-      observation.latitude,
-    ],
+    getPosition: (observation) => [observation.longitude, observation.latitude],
 
     getWeight: 1,
     aggregation: 'SUM',
@@ -115,11 +101,8 @@ function createDensityLayer(
       [236, 253, 245, 250],
     ],
 
-    onError: error => {
-      reportError(
-        'Observation density',
-        error,
-      )
+    onError: (error) => {
+      reportError('Observation density', error)
 
       return true
     },
@@ -136,10 +119,7 @@ function createPointLayer(
 
     opacity: detailed ? 0.92 : 0.28,
 
-    getPosition: observation => [
-      observation.longitude,
-      observation.latitude,
-    ],
+    getPosition: (observation) => [observation.longitude, observation.latitude],
 
     getRadius: 7_000,
     radiusMinPixels: detailed ? 3 : 1.5,
@@ -154,19 +134,15 @@ function createPointLayer(
 
     onClick: selectObservation,
 
-    onError: error => {
-      reportError(
-        'Observation points',
-        error,
-      )
+    onError: (error) => {
+      reportError('Observation points', error)
 
       return true
     },
   })
 }
 
-function createSelectedPointLayer():
-  ScatterplotLayer<Observation> | null {
+function createSelectedPointLayer(): ScatterplotLayer<Observation> | null {
   if (!selectedObservation.value) {
     return null
   }
@@ -175,10 +151,7 @@ function createSelectedPointLayer():
     id: 'selected-observation',
     data: [selectedObservation.value],
 
-    getPosition: observation => [
-      observation.longitude,
-      observation.latitude,
-    ],
+    getPosition: (observation) => [observation.longitude, observation.latitude],
 
     getRadius: 10_000,
     radiusMinPixels: 6,
@@ -198,15 +171,12 @@ function updateLayers(): void {
     return
   }
 
-  const observations =
-    validObservations.value
+  const observations = validObservations.value
 
   if (observations.length === 0) {
     reportError(
       'Observation data',
-      new Error(
-        'No observations have valid coordinates.',
-      ),
+      new Error('No observations have valid coordinates.'),
     )
 
     return
@@ -214,8 +184,7 @@ function updateLayers(): void {
 
   errorMessage.value = ''
 
-  detailView.value =
-    map.getZoom() >= DETAIL_ZOOM
+  detailView.value = map.getZoom() >= DETAIL_ZOOM
 
   if (!detailView.value) {
     selectedObservation.value = null
@@ -224,20 +193,12 @@ function updateLayers(): void {
   const layers = []
 
   if (!detailView.value) {
-    layers.push(
-      createDensityLayer(observations),
-    )
+    layers.push(createDensityLayer(observations))
   }
 
-  layers.push(
-    createPointLayer(
-      observations,
-      detailView.value,
-    ),
-  )
+  layers.push(createPointLayer(observations, detailView.value))
 
-  const selectedPointLayer =
-    createSelectedPointLayer()
+  const selectedPointLayer = createSelectedPointLayer()
 
   if (selectedPointLayer) {
     layers.push(selectedPointLayer)
@@ -245,8 +206,7 @@ function updateLayers(): void {
 
   overlay.setProps({ layers })
 
-  status.value =
-    `${observations.length.toLocaleString()} sampled observations`
+  status.value = `${observations.length.toLocaleString()} sampled observations`
 }
 
 function verifyMapSize(): boolean {
@@ -254,18 +214,14 @@ function verifyMapSize(): boolean {
     return false
   }
 
-  const bounds =
-    mapElement.value.getBoundingClientRect()
+  const bounds = mapElement.value.getBoundingClientRect()
 
-  if (
-    bounds.width === 0 ||
-    bounds.height === 0
-  ) {
+  if (bounds.width === 0 || bounds.height === 0) {
     reportError(
       'Map layout',
       new Error(
         `The map has invalid dimensions ` +
-        `${bounds.width} × ${bounds.height}.`,
+          `${bounds.width} × ${bounds.height}.`,
       ),
     )
 
@@ -277,12 +233,7 @@ function verifyMapSize(): boolean {
 
 onMounted(() => {
   if (!mapElement.value) {
-    reportError(
-      'Map setup',
-      new Error(
-        'The map element was not found.',
-      ),
-    )
+    reportError('Map setup', new Error('The map element was not found.'))
 
     return
   }
@@ -291,17 +242,15 @@ onMounted(() => {
     return
   }
 
-  const touchFirstDevice =
-    window.matchMedia(
-      '(hover: none) and (pointer: coarse)',
-    ).matches
+  const touchFirstDevice = window.matchMedia(
+    '(hover: none) and (pointer: coarse)',
+  ).matches
 
   try {
     map = new Map({
       container: mapElement.value,
 
-      style:
-        'https://tiles.openfreemap.org/styles/liberty',
+      style: 'https://tiles.openfreemap.org/styles/liberty',
 
       center: [-96, 48],
       zoom: 2.5,
@@ -316,8 +265,7 @@ onMounted(() => {
 
       attributionControl: false,
 
-      cancelPendingTileRequestsWhileZooming:
-        false,
+      cancelPendingTileRequestsWhileZooming: false,
 
       maxTileCacheZoomLevels: 6,
     })
@@ -329,31 +277,23 @@ onMounted(() => {
       'top-right',
     )
 
-    map.on('error', event => {
+    map.on('error', (event) => {
       if (basemapWarningLogged) {
         return
       }
 
       basemapWarningLogged = true
 
-      console.warn(
-        'Some basemap resources could not be loaded.',
-        event.error,
-      )
+      console.warn('Some basemap resources could not be loaded.', event.error)
     })
 
-    map.on(
-      'zoomend',
-      updateLayers,
-    )
+    map.on('zoomend', updateLayers)
 
     map.once('load', () => {
       if (!map) {
         reportError(
           'Map setup',
-          new Error(
-            'The map was removed before loading.',
-          ),
+          new Error('The map was removed before loading.'),
         )
 
         return
@@ -364,11 +304,8 @@ onMounted(() => {
           interleaved: false,
           layers: [],
 
-          onError: error => {
-            reportError(
-              'Deck.gl',
-              error,
-            )
+          onError: (error) => {
+            reportError('Deck.gl', error)
           },
         })
 
@@ -376,28 +313,19 @@ onMounted(() => {
         map.resize()
         updateLayers()
       } catch (error) {
-        reportError(
-          'Observation layers',
-          error,
-        )
+        reportError('Observation layers', error)
       }
     })
 
-    resizeObserver =
-      new ResizeObserver(() => {
-        if (verifyMapSize()) {
-          map?.resize()
-        }
-      })
+    resizeObserver = new ResizeObserver(() => {
+      if (verifyMapSize()) {
+        map?.resize()
+      }
+    })
 
-    resizeObserver.observe(
-      mapElement.value,
-    )
+    resizeObserver.observe(mapElement.value)
   } catch (error) {
-    reportError(
-      'Map setup',
-      error,
-    )
+    reportError('Map setup', error)
   }
 })
 
@@ -407,9 +335,7 @@ watch(
     if (
       selectedObservation.value &&
       !props.observations.some(
-        observation =>
-          observation.id ===
-          selectedObservation.value?.id,
+        (observation) => observation.id === selectedObservation.value?.id,
       )
     ) {
       selectedObservation.value = null
@@ -435,9 +361,7 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="w-full">
-    <div
-      class="relative h-[380px] w-full sm:h-[480px] lg:h-[540px]"
-    >
+    <div class="relative h-[380px] w-full sm:h-[480px] lg:h-[540px]">
       <div
         ref="mapElement"
         class="h-full w-full"
@@ -460,9 +384,7 @@ onBeforeUnmount(() => {
         class="absolute left-3 top-3 z-10 w-[min(320px,calc(100%-4.5rem))] rounded-lg border border-slate-200 bg-white/95 p-4 text-slate-900"
         aria-live="polite"
       >
-        <div
-          class="flex items-start justify-between gap-3"
-        >
+        <div class="flex items-start justify-between gap-3">
           <div>
             <p
               class="text-xs font-medium uppercase tracking-wide text-amber-700"
@@ -482,10 +404,7 @@ onBeforeUnmount(() => {
             type="button"
             class="rounded px-2 py-1 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-900"
             aria-label="Close observation details"
-            @click="
-              selectedObservation = null;
-              updateLayers()
-            "
+            @click="clearSelectedObservation"
           >
             Close
           </button>
@@ -493,21 +412,15 @@ onBeforeUnmount(() => {
 
         <dl class="mt-3 space-y-3 text-sm">
           <div>
-            <dt class="text-slate-500">
-              Scientific name
-            </dt>
+            <dt class="text-slate-500">Scientific name</dt>
 
             <dd class="italic">
-              {{
-                selectedObservation.scientificName
-              }}
+              {{ selectedObservation.scientificName }}
             </dd>
           </div>
 
           <div>
-            <dt class="text-slate-500">
-              Date
-            </dt>
+            <dt class="text-slate-500">Date</dt>
 
             <dd>
               {{ selectedObservation.date }}
@@ -515,18 +428,14 @@ onBeforeUnmount(() => {
           </div>
 
           <div>
-            <dt class="text-slate-500">
-              Location
-            </dt>
+            <dt class="text-slate-500">Location</dt>
 
             <dd>
               {{
                 [
                   selectedObservation.locality,
                   selectedObservation.province,
-                  getCountryName(
-                    selectedObservation.countryCode,
-                  ),
+                  getCountryName(selectedObservation.countryCode),
                 ]
                   .filter(Boolean)
                   .join(', ')
@@ -535,9 +444,7 @@ onBeforeUnmount(() => {
           </div>
 
           <div>
-            <dt class="text-slate-500">
-              National park context
-            </dt>
+            <dt class="text-slate-500">Mapped park-system context</dt>
 
             <dd
               v-if="
@@ -546,14 +453,10 @@ onBeforeUnmount(() => {
               "
               class="font-medium text-emerald-700"
             >
-              {{
-                selectedObservation.protectedAreaName
-              }}
+              {{ selectedObservation.protectedAreaName }}
             </dd>
 
-            <dd v-else>
-              Outside mapped national park boundaries
-            </dd>
+            <dd v-else>Outside mapped park-system areas</dd>
           </div>
         </dl>
       </article>
@@ -586,10 +489,7 @@ onBeforeUnmount(() => {
           <span>Sampled observation</span>
         </div>
 
-        <div
-          v-if="selectedObservation"
-          class="mt-1 flex items-center gap-2"
-        >
+        <div v-if="selectedObservation" class="mt-1 flex items-center gap-2">
           <span
             class="h-3 w-3 rounded-full border border-amber-200 bg-amber-500"
           />
@@ -597,13 +497,8 @@ onBeforeUnmount(() => {
           <span>Selected observation</span>
         </div>
 
-        <div
-          v-if="!detailView"
-          class="mt-2"
-        >
-          <p class="text-slate-500">
-            Concentration
-          </p>
+        <div v-if="!detailView" class="mt-2">
+          <p class="text-slate-500">Concentration</p>
 
           <div
             class="mt-1 h-2 w-28 rounded-full bg-gradient-to-r from-slate-900 via-emerald-600 to-emerald-100"

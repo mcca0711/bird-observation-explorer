@@ -1,0 +1,11 @@
+dist
+node_modules
+.venv
+.pytest_cache
+coverage
+data
+docs
+public/data
+public/vendor
+package-lock.json
+LOCAL_LEARNING_NOTES.md

@@ -68,13 +68,9 @@ def test_clean_records_accepts_only_valid_unique_ca_us_records() -> None:
 
     assert len(cleaned) == 2
 
-    assert set(
-        cleaned["observation_id"]
-    ) == {"1", "2"}
+    assert set(cleaned["observation_id"]) == {"1", "2"}
 
-    assert set(
-        cleaned["country_code"]
-    ) == {"CA", "US"}
+    assert set(cleaned["country_code"]) == {"CA", "US"}
 
 
 def test_validate_dataset_accepts_valid_geographic_data() -> None:
@@ -145,11 +141,7 @@ def test_spatial_join_marks_observations_inside_protected_area() -> None:
     )
 
     protected_areas = gpd.GeoDataFrame(
-        {
-            "protected_area_name": [
-                "Example National Park"
-            ]
-        },
+        {"protected_area_name": ["Example National Park"]},
         geometry=[
             box(
                 -1,
@@ -166,36 +158,19 @@ def test_spatial_join_marks_observations_inside_protected_area() -> None:
         protected_areas,
     )
 
-    inside = enriched.loc[
-        enriched[
-            "observation_id"
-        ] == "inside"
-    ].iloc[0]
+    inside = enriched.loc[enriched["observation_id"] == "inside"].iloc[0]
 
-    outside = enriched.loc[
-        enriched[
-            "observation_id"
-        ] == "outside"
-    ].iloc[0]
+    outside = enriched.loc[enriched["observation_id"] == "outside"].iloc[0]
 
     assert len(enriched) == 2
 
-    assert bool(
-        inside["inside_protected_area"]
-    )
+    assert bool(inside["inside_protected_area"])
 
-    assert (
-        inside["protected_area_name"]
-        == "Example National Park"
-    )
+    assert inside["protected_area_name"] == "Example National Park"
 
-    assert not bool(
-        outside["inside_protected_area"]
-    )
+    assert not bool(outside["inside_protected_area"])
 
-    assert pd.isna(
-        outside["protected_area_name"]
-    )
+    assert pd.isna(outside["protected_area_name"])
 
 
 def test_spatial_join_does_not_duplicate_overlapping_observations() -> None:
@@ -245,9 +220,4 @@ def test_spatial_join_does_not_duplicate_overlapping_observations() -> None:
 
     assert len(enriched) == 1
 
-    assert (
-        enriched.iloc[0][
-            "protected_area_name"
-        ]
-        == "Alpha Park; Beta Park"
-    )
+    assert enriched.iloc[0]["protected_area_name"] == "Alpha Park; Beta Park"
